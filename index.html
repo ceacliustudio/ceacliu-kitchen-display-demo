@@ -88,7 +88,7 @@ body { margin: 0; background: #eef3f7; color: #172537; }
 	const full = edition === 'full';
 	document.querySelector('.demo-editions a[href="?edition=' + edition + '"]').setAttribute('aria-current', 'page');
 
-	const storageKey = 'ceacliu-kitchen-demo-v1';
+	const storageKey = 'ceacliu-kitchen-demo-v2';
 	const endpoint = new URL('demo-orders', location.href).href;
 	const now = () => Math.floor(Date.now() / 1000);
 
@@ -101,7 +101,7 @@ body { margin: 0; background: #eef3f7; color: #172537; }
 	const sample = () => [
 		{ id: 103, number: '103', created: now() - 80, state: 'new', started: 0, ready: 0, editable: true, note: 'Taie pizza în patru felii.', items: [options[0], options[2]] },
 		{ id: 102, number: '102', created: now() - 420, state: 'preparing', started: now() - 145, ready: 0, editable: true, note: '', items: [options[1], options[3]] },
-		{ id: 101, number: '101', created: now() - 800, state: 'ready', started: now() - 650, ready: now() - 310, editable: true, note: '', items: [options[1]] },
+		{ id: 101, number: '101', created: now() - 800, state: 'new', started: 0, ready: 0, editable: true, note: '', items: [options[1]] },
 		{ id: 100, number: '100', created: now() - 86410, state: 'ready', started: now() - 86400, ready: now() - 85800, editable: false, note: '', items: [options[3]] },
 	];
 	let orders = sample();
