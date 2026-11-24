@@ -122,8 +122,11 @@ body { margin: 0; background: #eef3f7; color: #172537; }
 	});
 
 	document.getElementById('demo-reset').addEventListener('click', () => {
-		orders = sample();
-		save();
+		try {
+			sessionStorage.removeItem(storageKey);
+			sessionStorage.removeItem('ceacliu-kitchen-station:' + location.pathname);
+		} catch {}
+		location.reload();
 	});
 
 	const originalFetch = window.fetch.bind(window);
