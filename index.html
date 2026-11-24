@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="ro">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Încearcă ecranul de bucătărie Ceacliu pentru WooCommerce, cu comenzi fictive și edițiile Lite și Full.">
+	<title>Demo Ecran bucătărie · Ceacliu Studios</title>
+<style>
+.ck { color: #172537; margin-block: 24px; }
+.ck-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ck-header h1 { font-size: clamp(28px, 4vw, 44px); font-weight: 700; line-height: 1.15; }
+.ck-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+.ck-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.ck-board.ck-history { grid-template-columns: minmax(0, 1fr); }
+.ck-column { background: #e7edf4; border-top: 5px solid #526981; padding: 12px; border-radius: 10px; min-width: 0; }
+.ck-new { border-color: #2266af; }
+.ck-preparing { border-color: #9b5c14; }
+.ck-ready { border-color: #267257; }
+.ck-column h2 { margin: 0 0 12px; font-size: 19px; }
+.ck-ticket { background: #fff; border-radius: 8px; margin-bottom: 10px; padding: 14px; box-shadow: 0 1px 3px #17253724; overflow-wrap: anywhere; }
+.ck-ticket-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.ck-ticket h3 { margin: 0; font-size: 18px; }
+.ck-time, .ck-empty { color: #40536b; }
+.ck-items { list-style: none; padding: 0; margin: 0; }
+.ck-item { font-size: 16px; line-height: 1.35; margin-bottom: 9px; }
+.ck-option { font-size: 14px; color: #354760; margin: 3px 0 0 12px; white-space: pre-line; }
+.ck-note { border-left: 3px solid #cc811c; padding: 8px; margin: 10px 0; background: #fff3df; font-size: 15px; white-space: pre-wrap; }
+.ck-timer { font-variant-numeric: tabular-nums; font-weight: 600; }
+.ck .ck-button, .ck .ck-select { font: inherit; border-radius: 6px; padding: 8px 12px; min-height: 44px; }
+.ck-button { border: 1px solid #254261; background: #fff; color: #183957; cursor: pointer; }
+.ck-action { width: 100%; margin-top: 6px; background: #183957; color: #fff; }
+.ck-button:disabled { opacity: .52; cursor: default; }
+.ck-error { color: #a52923; font-weight: 700; }
+@media (max-width: 780px) {
+	.ck-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 535px) {
+	.ck-board { grid-template-columns: minmax(0, 1fr); }
+}
+
+.ck:fullscreen { overflow: auto; background: #f4f7fb; padding: 18px; margin: 0; }
+
+:root { color-scheme: light; font: 16px/1.5 system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #eef3f7; color: #172537; }
+.demo { max-width: 1330px; padding: clamp(18px, 4vw, 54px); margin-inline: auto; }
+.demo-intro { padding-bottom: 22px; border-bottom: 1px solid #c7d4df; }
+.demo-brand { color: #315f64; font-weight: 700; text-decoration: none; }
+.demo-intro h1 { font-size: clamp(40px, 6vw, 74px); letter-spacing: -.055em; line-height: 1.08; margin: 12px 0; }
+.demo-intro p { color: #43596d; margin: 0 0 20px; max-width: 62ch; }
+.demo-editions, .demo-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.demo-editions a { background: #fff; color: #173353; border: 1px solid #c7d4df; border-radius: 7px; padding: 7px 19px; text-decoration: none; min-height: 44px; }
+.demo-editions a[aria-current="page"] { color: #fff; background: #173353; border-color: #173353; }
+.ck .ck-primary { background: #226456; border-color: #226456; color: #fff; }
+.ck-option { font-size: 15px; }
+#ck-status { font-size: 14px; }
+:focus-visible { outline: 3px solid #2073c9; outline-offset: 2px; }
+
+</style>
+</head>
+<body>
+	<main class="demo">
+		<header class="demo-intro">
+			<a class="demo-brand" href="https://github.com/ceacliustudio">Ceacliu Studios</a>
+			<h1>Ecran bucătărie</h1>
+			<p>Testează cum ajung comenzile WooCommerce pe tableta din bucătărie. Comenzile de aici sunt fictive.</p>
+			<nav aria-label="Ediții" class="demo-editions">
+				<a href="?edition=lite">Lite</a>
+				<a href="?edition=full">Full</a>
+			</nav>
+		</header>
+		<section id="ceacliu-kitchen" class="ck" aria-label="Panou de comenzi">
+			<header class="ck-header">
+				<div class="demo-actions">
+					<button type="button" class="ck-button ck-primary" id="demo-order">Simulează o comandă</button>
+					<button type="button" class="ck-button" id="demo-reset">Resetează demo-ul</button>
+				</div>
+				<div id="ck-controls" class="ck-controls"></div>
+			</header>
+			<p id="ck-status" role="status">Se încarcă comenzile…</p>
+			<div id="ck-board" class="ck-board" aria-busy="true"></div>
+		</section>
+	</main>
+	<noscript>Activează JavaScript în browser ca să poți folosi demo-ul.</noscript>
+<script>
+(() => {
+	const edition = new URLSearchParams(location.search).get('edition') === 'lite' ? 'lite' : 'full';
+	const full = edition === 'full';
+	document.querySelector('.demo-editions a[href="?edition=' + edition + '"]').setAttribute('aria-current', 'page');
+
+	const storageKey = 'ceacliu-kitchen-demo-v1';
+	const endpoint = new URL('demo-orders', location.href).href;
+	const now = () => Math.floor(Date.now() / 1000);
+
+	const options = [
+		{ name: 'Pizza Margherita', qty: 2, stations: ['pizza'], options: [{ label: 'Extra', value: 'Mozzarella, măsline' }] },
+		{ name: 'Cartofi cu parmezan', qty: 1, stations: ['kitchen'], options: [{ label: 'Sos', value: 'Usturoi' }] },
+		{ name: 'Limonadă', qty: 2, stations: ['bar'], options: [{ label: 'Opțiuni', value: 'Fără gheață' }] },
+		{ name: 'Pizza Diavola', qty: 1, stations: ['pizza'], options: [{ label: 'Aluat', value: 'Subțire' }] },
+	];
+	const sample = () => [
+		{ id: 103, number: '103', created: now() - 80, state: 'new', started: 0, ready: 0, editable: true, note: 'Taie pizza în patru felii.', items: [options[0], options[2]] },
+		{ id: 102, number: '102', created: now() - 420, state: 'preparing', started: now() - 145, ready: 0, editable: true, note: '', items: [options[1], options[3]] },
+		{ id: 101, number: '101', created: now() - 800, state: 'ready', started: now() - 650, ready: now() - 310, editable: true, note: '', items: [options[1]] },
+		{ id: 100, number: '100', created: now() - 86410, state: 'ready', started: now() - 86400, ready: now() - 85800, editable: false, note: '', items: [options[3]] },
+	];
+	let orders = sample();
+	try {
+		const saved = JSON.parse(sessionStorage.getItem(storageKey));
+		if (Array.isArray(saved)) orders = saved;
+	} catch {}
+
+	function save() {
+		try { sessionStorage.setItem(storageKey, JSON.stringify(orders)); } catch {}
+	}
+
+	document.getElementById('demo-order').addEventListener('click', () => {
+		const id = Math.max(103, ...orders.map((order) => order.id)) + 1;
+		const items = id % 2 === 0 ? [options[3], options[2]] : [options[1], options[0]];
+		orders.unshift({ id, number: String(id), created: now(), state: 'new', started: 0, ready: 0, editable: true, note: '', items });
+		save();
+	});
+
+	document.getElementById('demo-reset').addEventListener('click', () => {
+		orders = sample();
+		save();
+	});
+
+	const originalFetch = window.fetch.bind(window);
+	window.fetch = async (url, config) => {
+		if (url !== endpoint) return originalFetch(url, config);
+		const body = config.body;
+		const action = body.get('action');
+		let result = { success: true, data: null };
+		let status = 200;
+		if (action === 'ceacliu_kitchen_orders') {
+			result.data = { orders: full ? orders : orders.filter((order) => order.editable), time: now() };
+		} else if (action === 'ceacliu_kitchen_transition') {
+			const order = orders.find((ticket) => ticket.id === Number(body.get('order_id')));
+			const next = body.get('next');
+			const previous = { preparing: 'new', ready: 'preparing' };
+			if (!order?.editable || !(next in previous) || (order.state !== next && order.state !== previous[next])) {
+				status = 409;
+				result = { success: false, data: null };
+			} else if (order.state !== next) {
+				order.state = next;
+				order[next === 'preparing' ? 'started' : 'ready'] = now();
+				save();
+			}
+		}
+		return new Response(JSON.stringify(result), {
+			status, headers: { 'Content-Type': 'application/json' },
+		});
+	};
+
+	window.ceacliuKitchen = {
+		ajax: endpoint,
+		nonce: 'demo',
+		interval: 1000,
+		full,
+		stations: { pizza: 'Pizza', kitchen: 'Bucătărie', bar: 'Bar' },
+		labels: {
+			fullscreen: 'Ecran complet', exitFull: 'Ieși din ecran complet',
+			new: 'Noi', preparing: 'În preparare', ready: 'Gata',
+			start: 'Începe prepararea', finish: 'Marchează ca gata',
+			order: 'Comanda', empty: 'Nu sunt comenzi aici.', connected: 'Ultima actualizare',
+			error: 'Conexiunea s-a întrerupt.', expired: 'Reîncarcă această pagină.',
+			conflict: 'Comanda s-a schimbat. Ecranul a fost actualizat.',
+			saveError: 'Comanda nu a putut fi actualizată.',
+			all: 'Toate stațiile', station: 'Stație', history: 'Istoric comenzi gata (7 zile)',
+			live: 'Comenzi active', soundOn: 'Activează sunetul', soundOff: 'Oprește sunetul',
+			elapsed: 'Timp de preparare',
+		},
+	};
+
+})();
+if (window.ceacliuKitchen.full) {
+(() => {
+	window.ceacliuKitchenFull = {
+		init({ config, controls, element, render }) {
+			const labels = config.labels;
+			const station = element('select', 'ck-select');
+			station.setAttribute('aria-label', labels.station);
+			for (const [value, name] of Object.entries({ all: labels.all, ...config.stations })) {
+				const option = element('option', '', name);
+				option.value = value;
+				station.append(option);
+			}
+			const stationKey = 'ceacliu-kitchen-station:' + location.pathname;
+			try {
+				const saved = sessionStorage.getItem(stationKey);
+				if (saved && Object.hasOwn(config.stations, saved)) station.value = saved;
+			} catch {}
+			station.addEventListener('change', () => {
+				try { sessionStorage.setItem(stationKey, station.value); } catch {}
+				render();
+			});
+
+			const historyButton = element('button', 'ck-button', labels.history);
+			const soundButton = element('button', 'ck-button', labels.soundOn);
+			historyButton.type = soundButton.type = 'button';
+			let history = false;
+			let sound = false;
+			let context;
+			let seen = null;
+			let clockOffset = 0;
+			controls.append(station, historyButton, soundButton);
+
+			historyButton.addEventListener('click', () => {
+				history = !history;
+				historyButton.textContent = history ? labels.live : labels.history;
+				render();
+			});
+
+			function beep() {
+				if (context?.state !== 'running') return;
+				const wave = context.createOscillator();
+				const volume = context.createGain();
+				const now = context.currentTime;
+				wave.frequency.value = 660;
+				volume.gain.setValueAtTime(0.13, now);
+				volume.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+				wave.connect(volume).connect(context.destination);
+				wave.start(now);
+				wave.stop(now + 0.3);
+			}
+
+			soundButton.addEventListener('click', async () => {
+				if (sound) {
+					sound = false;
+					soundButton.textContent = labels.soundOn;
+					return;
+				}
+				if (!window.AudioContext) return;
+				try {
+					context ??= new AudioContext();
+					await context.resume();
+					sound = context.state === 'running';
+					if (sound) {
+						soundButton.textContent = labels.soundOff;
+						beep();
+					}
+				} catch {
+					sound = false;
+				}
+			});
+
+			function itemsFor(order) {
+				return station.value === 'all' ? order.items : order.items.filter((item) => item.stations.includes(station.value));
+			}
+
+			function tick() {
+				for (const timer of document.querySelectorAll('#ck-board [data-ck-start]')) {
+					const end = Number(timer.dataset.ckEnd) || Date.now() / 1000 + clockOffset;
+					const elapsed = Math.max(0, Math.floor(end - Number(timer.dataset.ckStart)));
+					const minutes = Math.floor(elapsed / 60);
+					timer.textContent = labels.elapsed + ' ' + minutes + ':' + String(elapsed % 60).padStart(2, '0');
+				}
+			}
+			window.setInterval(tick, 1000);
+
+			return {
+				fresh(orders, serverTime) {
+					clockOffset = serverTime - Date.now() / 1000;
+					const live = orders.filter((order) => order.state !== 'ready');
+					if (sound && seen && live.some((order) => !seen.has(order.id) && itemsFor(order).length)) beep();
+					seen = new Set(live.map((order) => order.id));
+				},
+				view(orders) {
+					const now = Date.now() / 1000 + clockOffset;
+					return {
+						columns: history ? ['ready'] : ['new', 'preparing', 'ready'],
+						orders: orders
+							.filter((order) => history ? order.state === 'ready' : order.editable && (order.state !== 'ready' || now - order.ready <= 86400))
+							.map((order) => ({ ...order, items: itemsFor(order) }))
+							.filter((order) => order.items.length),
+					};
+				},
+				decorate(ticket, order) {
+					if (!order.started) return;
+					const timer = element('p', 'ck-timer');
+					timer.dataset.ckStart = order.started;
+					timer.dataset.ckEnd = order.ready;
+					ticket.append(timer);
+					queueMicrotask(tick);
+				},
+			};
+		},
+	};
+})();
+
+}
+(() => {
+	const config = window.ceacliuKitchen;
+	const labels = config.labels;
+	const columns = ['new', 'preparing', 'ready'];
+	const actions = { new: ['preparing', labels.start], preparing: ['ready', labels.finish] };
+
+	function element(tag, className, value) {
+		const node = document.createElement(tag);
+		if (className) node.className = className;
+		if (value !== undefined) node.textContent = value;
+		return node;
+	}
+
+	async function request(action, fields = {}) {
+		const controller = new AbortController();
+		const timeout = window.setTimeout(() => controller.abort(), 12000);
+		try {
+			const response = await fetch(config.ajax, {
+				method: 'POST',
+				credentials: 'same-origin',
+				cache: 'no-store',
+				signal: controller.signal,
+				body: new URLSearchParams({ action, nonce: config.nonce, ...fields }),
+			});
+			const result = await response.json().catch(() => null);
+			if (!response.ok || !result?.success) {
+				throw Object.assign(new Error('Kitchen request failed'), {
+					status: result === 0 || result === -1 ? 403 : response.status,
+				});
+			}
+			return result.data;
+		} finally {
+			window.clearTimeout(timeout);
+		}
+	}
+
+	function init() {
+		const root = document.getElementById('ceacliu-kitchen');
+		const board = document.getElementById('ck-board');
+		const status = document.getElementById('ck-status');
+		if (!root || !board) return;
+
+		const controls = document.getElementById('ck-controls');
+		const full = window.ceacliuKitchenFull?.init({ config, element, controls, render });
+		if (document.fullscreenEnabled) {
+			const button = element('button', 'ck-button', labels.fullscreen);
+			button.type = 'button';
+			button.addEventListener('click', () => {
+				const change = document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen();
+				change.catch(() => {});
+			});
+			document.addEventListener('fullscreenchange', () => {
+				button.textContent = document.fullscreenElement ? labels.exitFull : labels.fullscreen;
+			});
+			controls.append(button);
+		}
+		const time = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' });
+		let orders = [];
+		let busy = false;
+		let refreshTask;
+		let offline = true;
+		let fingerprint = '';
+
+		function card(order) {
+			const ticket = element('article', 'ck-ticket');
+			const heading = element('header', 'ck-ticket-heading');
+			heading.append(element('h3', '', labels.order + ' #' + order.number));
+			if (order.created) {
+				heading.append(element('span', 'ck-time', time.format(order.created * 1000)));
+			}
+			ticket.append(heading);
+			const lineItems = element('ul', 'ck-items');
+			for (const item of order.items) {
+				const line = element('li', 'ck-item');
+				line.append(element('strong', '', item.qty + ' × ' + item.name));
+				for (const option of item.options) {
+					line.append(element('div', 'ck-option', option.label + ': ' + option.value));
+				}
+				lineItems.append(line);
+			}
+			ticket.append(lineItems);
+			if (order.note) ticket.append(element('p', 'ck-note', order.note));
+			full?.decorate(ticket, order);
+
+			const action = actions[order.state];
+			if (action && order.editable) {
+				const button = element('button', 'ck-button ck-action', action[1]);
+				button.type = 'button';
+				button.dataset.order = order.id;
+				button.disabled = offline || busy;
+				button.addEventListener('click', () => transition(order.id, action[0]));
+				ticket.append(button);
+			}
+			return ticket;
+		}
+
+		function render() {
+			const currentButton = board.contains(document.activeElement) ? document.activeElement.dataset.order : null;
+			const view = full?.view(orders) ?? {
+				columns,
+				orders: orders.filter((order) => order.state !== 'ready' || Date.now() / 1000 - order.ready <= 86400),
+			};
+			board.classList.toggle('ck-history', view.columns.length === 1);
+			const fragment = document.createDocumentFragment();
+			for (const state of view.columns) {
+				const column = element('section', 'ck-column ck-' + state);
+				const selected = view.orders.filter((order) => order.state === state);
+				selected.sort((a, b) => state === 'ready' ? b.ready - a.ready : a.created - b.created);
+				column.append(element('h2', '', labels[state] + ' · ' + selected.length));
+				if (!selected.length) column.append(element('p', 'ck-empty', labels.empty));
+				for (const order of selected) column.append(card(order));
+				fragment.append(column);
+			}
+			board.replaceChildren(fragment);
+			if (currentButton) board.querySelector('[data-order="' + currentButton + '"]')?.focus({ preventScroll: true });
+			board.setAttribute('aria-busy', 'false');
+		}
+
+		function show(message, isError = false) {
+			status.textContent = message;
+			status.classList.toggle('ck-error', isError);
+		}
+
+		async function refresh() {
+			try {
+				const data = await request('ceacliu_kitchen_orders');
+				full?.fresh(data.orders, data.time);
+				const serialized = JSON.stringify(data.orders);
+				const redraw = offline || serialized !== fingerprint;
+				offline = false;
+				orders = data.orders;
+				fingerprint = serialized;
+				if (redraw) render();
+				show(labels.connected + ' ' + time.format(Date.now()));
+			} catch (error) {
+				offline = true;
+				render();
+				show(error.status === 403 ? labels.expired : labels.error, true);
+			}
+		}
+
+		async function transition(id, next) {
+			if (busy || offline) return;
+			busy = true;
+			render();
+			try {
+				await refreshTask;
+				if (offline) return;
+				await request('ceacliu_kitchen_transition', { order_id: id, next });
+				await refresh();
+			} catch (error) {
+				await refresh();
+				const message = error.status === 409 ? labels.conflict : labels.saveError;
+				show(error.status === 403 ? labels.expired : message, true);
+			} finally {
+				busy = false;
+				render();
+			}
+		}
+
+		async function poll() {
+			if (!busy) {
+				refreshTask = refresh();
+				await refreshTask;
+				refreshTask = undefined;
+			}
+			window.setTimeout(poll, config.interval);
+		}
+
+		poll();
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', init, { once: true });
+	} else {
+		init();
+	}
+})();
+
+
+</script>
+</body>
+</html>
