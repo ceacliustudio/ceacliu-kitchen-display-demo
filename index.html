@@ -1,11 +1,31 @@
-<!doctype html>
-<html lang="ro">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="Încearcă ecranul de bucătărie Ceacliu pentru WooCommerce, cu comenzi fictive și edițiile Lite și Full.">
-	<title>Demo Ecran bucătărie · Ceacliu Studios</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kitchen Display demo · Ceacliu Studios</title>
+<meta name="description" content="Interactive demo of Ceacliu Kitchen Display, a kitchen order board for WooCommerce. Lite and Full editions.">
 <style>
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#f4f7fb;color:#172537}
+.page{max-width:1200px;margin:0 auto;padding:28px 20px 48px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.brand{font-size:13px;font-weight:700;color:#1d6b52;letter-spacing:.02em}
+.intro h1{font-size:clamp(34px,6vw,60px);margin:8px 0 10px;line-height:1.05}
+.intro p{margin:0;color:#40536b;max-width:640px;line-height:1.5}
+.seg{display:inline-flex;gap:6px;margin-top:16px}
+.seg button,.demo-bar button{font:inherit;font-size:15px;border:1px solid #254261;background:#fff;color:#183957;border-radius:6px;padding:8px 14px;min-height:40px;cursor:pointer}
+.seg button[aria-pressed=true]{background:#183957;color:#fff}
+.demo-bar{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 0;padding-top:16px;border-top:1px solid #d5dee8}
+.demo-bar .primary{background:#1d6b52;border-color:#1d6b52;color:#fff}
+.hint{font-size:13px;color:#40536b;margin:8px 0 0}
+.lang button{font-size:14px;min-height:34px;padding:5px 12px}
+.ck{margin-top:6px}
+.ck-header h1{display:none}
+.ck-header{justify-content:flex-end;margin-bottom:6px}
+#ck-status{font-size:13px;color:#40536b;margin:6px 0 10px}
+footer{margin-top:28px;font-size:13px;color:#40536b}
+footer a{color:#183957}
 .ck { color: #172537; margin-block: 24px; }
 .ck-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .ck-header h1 { font-size: clamp(28px, 4vw, 44px); font-weight: 700; line-height: 1.15; }
@@ -39,145 +59,156 @@
 }
 
 .ck:fullscreen { overflow: auto; background: #f4f7fb; padding: 18px; margin: 0; }
-
-:root { color-scheme: light; font: 16px/1.5 system-ui, sans-serif; }
-* { box-sizing: border-box; }
-body { margin: 0; background: #eef3f7; color: #172537; }
-.demo { max-width: 1330px; padding: clamp(18px, 4vw, 54px); margin-inline: auto; }
-.demo-intro { padding-bottom: 22px; border-bottom: 1px solid #c7d4df; }
-.demo-brand { color: #315f64; font-weight: 700; text-decoration: none; }
-.demo-intro h1 { font-size: clamp(40px, 6vw, 74px); letter-spacing: -.055em; line-height: 1.08; margin: 12px 0; }
-.demo-intro p { color: #43596d; margin: 0 0 20px; max-width: 62ch; }
-.demo-editions, .demo-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.demo-editions a { background: #fff; color: #173353; border: 1px solid #c7d4df; border-radius: 7px; padding: 7px 19px; text-decoration: none; min-height: 44px; }
-.demo-editions a[aria-current="page"] { color: #fff; background: #173353; border-color: #173353; }
-.ck .ck-primary { background: #226456; border-color: #226456; color: #fff; }
-.ck-option { font-size: 15px; }
-#ck-status { font-size: 14px; }
-:focus-visible { outline: 3px solid #2073c9; outline-offset: 2px; }
-
 </style>
 </head>
 <body>
-	<main class="demo">
-		<header class="demo-intro">
-			<a class="demo-brand" href="https://github.com/ceacliustudio">Ceacliu Studios</a>
-			<h1>Ecran bucătărie</h1>
-			<p>Testează cum ajung comenzile WooCommerce pe tableta din bucătărie. Comenzile de aici sunt fictive.</p>
-			<nav aria-label="Ediții" class="demo-editions">
-				<a href="?edition=lite">Lite</a>
-				<a href="?edition=full">Full</a>
-			</nav>
-		</header>
-		<section id="ceacliu-kitchen" class="ck" aria-label="Panou de comenzi">
-			<header class="ck-header">
-				<div class="demo-actions">
-					<button type="button" class="ck-button ck-primary" id="demo-order">Simulează o comandă</button>
-					<button type="button" class="ck-button" id="demo-reset">Resetează demo-ul</button>
-				</div>
-				<div id="ck-controls" class="ck-controls"></div>
-			</header>
-			<p id="ck-status" role="status">Se încarcă comenzile…</p>
-			<div id="ck-board" class="ck-board" aria-busy="true"></div>
-		</section>
-	</main>
-	<noscript>Activează JavaScript în browser ca să poți folosi demo-ul.</noscript>
+<div class="page">
+	<div class="top">
+		<div class="intro">
+			<div class="brand">Ceacliu Studios</div>
+			<h1 data-t="title"></h1>
+			<p data-t="lead"></p>
+			<div class="seg" role="group" aria-label="Edition">
+				<button type="button" data-mode="lite">Lite</button>
+				<button type="button" data-mode="full">Full</button>
+			</div>
+			<p class="hint" data-t-mode></p>
+		</div>
+		<div class="seg lang" role="group" aria-label="Language">
+			<button type="button" data-lang="en">English</button>
+			<button type="button" data-lang="ro">Română</button>
+		</div>
+	</div>
+	<div class="demo-bar">
+		<button type="button" class="primary" id="demo-add" data-t="add"></button>
+		<button type="button" id="demo-reset" data-t="reset"></button>
+	</div>
+	<div class="wrap ck" id="ceacliu-kitchen">
+		<header class="ck-header"><h1>Kitchen Display</h1><div id="ck-controls" class="ck-controls"></div></header>
+		<p id="ck-status" role="status"></p>
+		<div id="ck-board" class="ck-board" aria-busy="true"></div>
+	</div>
+	<footer data-t="footer"></footer>
+</div>
 <script>
-(() => {
-	const edition = new URLSearchParams(location.search).get('edition') === 'lite' ? 'lite' : 'full';
-	const full = edition === 'full';
-	document.querySelector('.demo-editions a[href="?edition=' + edition + '"]').setAttribute('aria-current', 'page');
+(function () {
+	var m = (location.hash || '').replace('#', '').split('-');
+	var mode = m[0] === 'lite' ? 'lite' : 'full';
+	var lang = m[1] === 'ro' ? 'ro' : 'en';
+	document.documentElement.lang = lang;
+	window.CK_DEMO = { mode: mode, lang: lang };
 
-	const storageKey = 'ceacliu-kitchen-demo-v2';
-	const endpoint = new URL('demo-orders', location.href).href;
-	const now = () => Math.floor(Date.now() / 1000);
-
-	const options = [
-		{ name: 'Pizza Margherita', qty: 2, stations: ['pizza'], options: [{ label: 'Extra', value: 'Mozzarella, măsline' }] },
-		{ name: 'Cartofi cu parmezan', qty: 1, stations: ['kitchen'], options: [{ label: 'Sos', value: 'Usturoi' }] },
-		{ name: 'Limonadă', qty: 2, stations: ['bar'], options: [{ label: 'Opțiuni', value: 'Fără gheață' }] },
-		{ name: 'Pizza Diavola', qty: 1, stations: ['pizza'], options: [{ label: 'Aluat', value: 'Subțire' }] },
-	];
-	const sample = () => [
-		{ id: 103, number: '103', created: now() - 80, state: 'new', started: 0, ready: 0, editable: true, note: 'Taie pizza în patru felii.', items: [options[0], options[2]] },
-		{ id: 102, number: '102', created: now() - 420, state: 'preparing', started: now() - 145, ready: 0, editable: true, note: '', items: [options[1], options[3]] },
-		{ id: 101, number: '101', created: now() - 800, state: 'new', started: 0, ready: 0, editable: true, note: '', items: [options[1]] },
-		{ id: 100, number: '100', created: now() - 86410, state: 'ready', started: now() - 86400, ready: now() - 85800, editable: false, note: '', items: [options[3]] },
-	];
-	let orders = sample();
-	try {
-		const saved = JSON.parse(sessionStorage.getItem(storageKey));
-		if (Array.isArray(saved)) orders = saved;
-	} catch {}
-
-	function save() {
-		try { sessionStorage.setItem(storageKey, JSON.stringify(orders)); } catch {}
-	}
-
-	document.getElementById('demo-order').addEventListener('click', () => {
-		const id = Math.max(103, ...orders.map((order) => order.id)) + 1;
-		const items = id % 2 === 0 ? [options[3], options[2]] : [options[1], options[0]];
-		orders.unshift({ id, number: String(id), created: now(), state: 'new', started: 0, ready: 0, editable: true, note: '', items });
-		save();
-	});
-
-	document.getElementById('demo-reset').addEventListener('click', () => {
-		try {
-			sessionStorage.removeItem(storageKey);
-			sessionStorage.removeItem('ceacliu-kitchen-station:' + location.pathname);
-		} catch {}
-		location.reload();
-	});
-
-	const originalFetch = window.fetch.bind(window);
-	window.fetch = async (url, config) => {
-		if (url !== endpoint) return originalFetch(url, config);
-		const body = config.body;
-		const action = body.get('action');
-		let result = { success: true, data: null };
-		let status = 200;
-		if (action === 'ceacliu_kitchen_orders') {
-			result.data = { orders: full ? orders : orders.filter((order) => order.editable), time: now() };
-		} else if (action === 'ceacliu_kitchen_transition') {
-			const order = orders.find((ticket) => ticket.id === Number(body.get('order_id')));
-			const next = body.get('next');
-			const previous = { preparing: 'new', ready: 'preparing' };
-			if (!order?.editable || !(next in previous) || (order.state !== next && order.state !== previous[next])) {
-				status = 409;
-				result = { success: false, data: null };
-			} else if (order.state !== next) {
-				order.state = next;
-				order[next === 'preparing' ? 'started' : 'ready'] = now();
-				save();
-			}
-		}
-		return new Response(JSON.stringify(result), {
-			status, headers: { 'Content-Type': 'application/json' },
-		});
-	};
-
-	window.ceacliuKitchen = {
-		ajax: endpoint,
-		nonce: 'demo',
-		interval: 1000,
-		full,
-		stations: { pizza: 'Pizza', kitchen: 'Bucătărie', bar: 'Bar' },
-		labels: {
-			fullscreen: 'Ecran complet', exitFull: 'Ieși din ecran complet',
-			new: 'Noi', preparing: 'În preparare', ready: 'Gata',
-			start: 'Începe prepararea', finish: 'Marchează ca gata',
-			order: 'Comanda', empty: 'Nu sunt comenzi aici.', connected: 'Ultima actualizare',
-			error: 'Conexiunea s-a întrerupt.', expired: 'Reîncarcă această pagină.',
-			conflict: 'Comanda s-a schimbat. Ecranul a fost actualizat.',
-			saveError: 'Comanda nu a putut fi actualizată.',
-			all: 'Toate stațiile', station: 'Stație', history: 'Istoric comenzi gata (7 zile)',
-			live: 'Comenzi active', soundOn: 'Activează sunetul', soundOff: 'Oprește sunetul',
-			elapsed: 'Timp de preparare',
+	var T = {
+		en: {
+			title: 'Kitchen Display',
+			lead: 'See how WooCommerce orders reach the kitchen tablet. Tap the buttons on the tickets to move them from New to Preparing to Ready. All orders here are fictional.',
+			lite: 'Lite: live board with New, Preparing and Ready, product options, customer notes and full screen. Free on WordPress.org.',
+			full: 'Full: everything in Lite, plus station views (Pizza, Kitchen, Bar), sound alerts for new orders, preparation timers and a 7-day ready history.',
+			add: 'Simulate an order', reset: 'Reset demo',
+			footer: 'Demo with fictional orders. In WordPress the board reads WooCommerce orders in Processing; kitchen statuses never change the order, the payment or customer e-mails. Made by Ceacliu Studios.',
+			labels: { fullscreen: 'Full screen', exitFull: 'Exit full screen', 'new': 'New', preparing: 'Preparing', ready: 'Ready', start: 'Start preparing', finish: 'Mark ready', order: 'Order', empty: 'No orders here.', connected: 'Last updated', error: 'Connection interrupted. Check WooCommerce before preparing an order.', expired: 'Session expired. Reload this page and sign in again if prompted.', conflict: 'The order changed. The board has been refreshed.', saveError: 'Could not update this order.', all: 'All stations', station: 'Station', history: 'Ready history (7 days)', live: 'Live board', soundOn: 'Enable sound', soundOff: 'Mute sound', elapsed: 'Prep time' },
+			stations: { pizza: 'Pizza', kitchen: 'Kitchen', bar: 'Bar' },
+			p: { diavola: 'Pizza Diavola', margherita: 'Pizza Margherita', quattro: 'Pizza Quattro Formaggi', caesar: 'Caesar salad', lasagna: 'Lasagna', fries: 'French fries', cola: 'Cola 0.5 l', lemonade: 'Lemonade', tiramisu: 'Tiramisu' },
+			o: { size: 'Size', extra: 'Extra toppings', sauce: 'Sauce', dressing: 'Dressing', remarks: 'Remarks' },
+			v: { s32: '32 cm', s42: '42 cm', mush: 'Mushrooms', olives: 'Olives', ham: 'Ham', garlic: 'Garlic', spicy: 'Spicy', side: 'On the side', crispy: 'Extra crispy', ice: 'No ice' },
+			notes: ['No onions, please.', 'Allergy: no nuts, please.', '', 'Cut the pizza into 8 slices.', '']
 		},
+		ro: {
+			title: 'Ecran bucătărie',
+			lead: 'Vezi cum ajung comenzile WooCommerce pe tableta din bucătărie. Apasă butoanele de pe bonuri ca să le muți din Noi în În preparare și apoi în Gata. Comenzile de aici sunt fictive.',
+			lite: 'Lite: panou live cu Noi, În preparare și Gata, opțiunile produselor, observațiile clientului și ecran complet. Gratuit pe WordPress.org.',
+			full: 'Full: tot ce are Lite, plus stații separate (Pizza, Bucătărie, Bar), sunet la comenzi noi, cronometru de preparare și istoricul comenzilor gata pe 7 zile.',
+			add: 'Simulează o comandă', reset: 'Resetează demo-ul',
+			footer: 'Demo cu comenzi fictive. În WordPress, panoul citește comenzile WooCommerce în procesare; stările din bucătărie nu schimbă comanda, plata sau e-mailurile clientului. Realizat de Ceacliu Studios.',
+			labels: { fullscreen: 'Ecran complet', exitFull: 'Ieși din ecran complet', 'new': 'Noi', preparing: 'În preparare', ready: 'Gata', start: 'Începe prepararea', finish: 'Marchează gata', order: 'Comanda', empty: 'Nu sunt comenzi aici.', connected: 'Ultima actualizare', error: 'Conexiune întreruptă. Verifică WooCommerce înainte să pregătești o comandă.', expired: 'Sesiunea a expirat. Reîncarcă pagina și autentifică-te din nou dacă ți se cere.', conflict: 'Comanda s-a schimbat. Panoul a fost actualizat.', saveError: 'Comanda nu a putut fi actualizată.', all: 'Toate stațiile', station: 'Stație', history: 'Istoric comenzi gata (7 zile)', live: 'Panou live', soundOn: 'Activează sunetul', soundOff: 'Oprește sunetul', elapsed: 'Timp de preparare' },
+			stations: { pizza: 'Pizza', kitchen: 'Bucătărie', bar: 'Bar' },
+			p: { diavola: 'Pizza Diavola', margherita: 'Pizza Margherita', quattro: 'Pizza Quattro Formaggi', caesar: 'Salată Caesar', lasagna: 'Lasagna', fries: 'Cartofi prăjiți', cola: 'Cola 0,5 l', lemonade: 'Limonadă', tiramisu: 'Tiramisu' },
+			o: { size: 'Mărime', extra: 'Toppinguri extra', sauce: 'Sos', dressing: 'Dressing', remarks: 'Observații' },
+			v: { s32: '32 cm', s42: '42 cm', mush: 'Ciuperci', olives: 'Măsline', ham: 'Șuncă', garlic: 'Usturoi', spicy: 'Picant', side: 'Separat', crispy: 'Foarte crocanți', ice: 'Fără gheață' },
+			notes: ['Fără ceapă, vă rog.', 'Alergie: fără nuci, vă rog.', '', 'Tăiați pizza în 8 felii.', '']
+		}
+	}[lang];
+	var STATION = { diavola: 'pizza', margherita: 'pizza', quattro: 'pizza', caesar: 'kitchen', lasagna: 'kitchen', fries: 'kitchen', tiramisu: 'kitchen', cola: 'bar', lemonade: 'bar' };
+
+	function item(key, qty, opts) {
+		return { name: T.p[key], qty: qty, options: (opts || []).map(function (o) { return { label: T.o[o[0]], value: o[1] }; }), stations: [STATION[key]] };
+	}
+	var TEMPLATES = [
+		function () { return [item('quattro', 1, [['size', T.v.s42], ['extra', T.v.ham]]), item('fries', 1, [['remarks', T.v.crispy]]), item('lemonade', 2, [['remarks', T.v.ice]])]; },
+		function () { return [item('diavola', 2, [['size', T.v.s32], ['sauce', T.v.spicy]]), item('cola', 2)]; },
+		function () { return [item('margherita', 1, [['size', T.v.s32], ['extra', T.v.mush + ', ' + T.v.olives]]), item('tiramisu', 1)]; },
+		function () { return [item('caesar', 1, [['dressing', T.v.side]]), item('lasagna', 1)]; }
+	];
+	var store, next, tpl;
+	function now() { return Math.floor(Date.now() / 1000); }
+	function seed() {
+		var t = now();
+		next = 105; tpl = 0;
+		store = [
+			{ id: 101, number: '101', created: t - 360, state: 'new', started: 0, ready: 0, editable: true, note: T.notes[0], items: [item('diavola', 1, [['size', T.v.s32], ['extra', T.v.mush + ', ' + T.v.olives]]), item('cola', 1)] },
+			{ id: 102, number: '102', created: t - 540, state: 'preparing', started: t - 260, ready: 0, editable: true, note: T.notes[2], items: [item('margherita', 2, [['size', T.v.s42]]), item('caesar', 1, [['dressing', T.v.side]])] },
+			{ id: 104, number: '104', created: t - 120, state: 'new', started: 0, ready: 0, editable: true, note: T.notes[3], items: [item('quattro', 1, [['size', T.v.s32], ['sauce', T.v.garlic]]), item('fries', 2)] },
+			{ id: 103, number: '103', created: t - 1500, state: 'ready', started: t - 1320, ready: t - 700, editable: true, note: T.notes[1], items: [item('lasagna', 1), item('lemonade', 2, [['remarks', T.v.ice]])] },
+			{ id: 98, number: '98', created: t - 2 * 86400 - 3000, state: 'ready', started: t - 2 * 86400 - 2700, ready: t - 2 * 86400 - 1800, editable: false, note: '', items: [item('margherita', 1, [['size', T.v.s32]]), item('tiramisu', 2)] }
+		];
+	}
+	seed();
+
+	function visible() {
+		var t = now();
+		return store.filter(function (o) {
+			if (mode === 'lite') { return o.editable && (o.state !== 'ready' || o.ready >= t - 86400); }
+			return o.state === 'ready' ? o.ready >= t - 7 * 86400 : o.editable;
+		}).map(function (o) {
+			var c = JSON.parse(JSON.stringify(o));
+			if (mode === 'lite') { c.items.forEach(function (i) { delete i.stations; }); }
+			return c;
+		});
+	}
+	function reply(status, body) {
+		return Promise.resolve(new Response(JSON.stringify(body), { status: status, headers: { 'Content-Type': 'application/json' } }));
+	}
+	var realFetch = window.fetch.bind(window);
+	window.fetch = function (url, opts) {
+		if (url !== 'demo:ajax') { return realFetch(url, opts); }
+		var p = new URLSearchParams(opts && opts.body ? opts.body.toString() : '');
+		if (p.get('action') === 'ceacliu_kitchen_orders') { return reply(200, { success: true, data: { orders: visible(), time: now() } }); }
+		if (p.get('action') === 'ceacliu_kitchen_transition') {
+			var prev = { preparing: 'new', ready: 'preparing' };
+			var to = p.get('next');
+			var o = store.filter(function (x) { return String(x.id) === p.get('order_id'); })[0];
+			if (!o || !prev[to] || !o.editable) { return reply(409, { success: false }); }
+			if (o.state === to) { return reply(200, { success: true }); }
+			if (o.state !== prev[to]) { return reply(409, { success: false }); }
+			o.state = to;
+			o[to === 'preparing' ? 'started' : 'ready'] = now();
+			return reply(200, { success: true });
+		}
+		return reply(400, { success: false });
 	};
 
+	window.ceacliuKitchen = { ajax: 'demo:ajax', nonce: 'demo', interval: 2000, labels: T.labels, full: mode === 'full', stations: T.stations };
+
+	document.querySelectorAll('[data-t]').forEach(function (el) { el.textContent = T[el.getAttribute('data-t')]; });
+	document.querySelector('[data-t-mode]').textContent = T[mode];
+	document.title = T.title + ' demo · Ceacliu Studios';
+	document.querySelectorAll('[data-mode]').forEach(function (b) {
+		b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
+		b.addEventListener('click', function () { if (b.dataset.mode !== mode) { location.hash = b.dataset.mode + '-' + lang; location.reload(); } });
+	});
+	document.querySelectorAll('[data-lang]').forEach(function (b) {
+		b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
+		b.addEventListener('click', function () { if (b.dataset.lang !== lang) { location.hash = mode + '-' + b.dataset.lang; location.reload(); } });
+	});
+	document.getElementById('demo-add').addEventListener('click', function () {
+		var t = now();
+		store.push({ id: next, number: String(next), created: t, state: 'new', started: 0, ready: 0, editable: true, note: T.notes[next % T.notes.length], items: TEMPLATES[tpl % TEMPLATES.length]() });
+		next++; tpl++;
+	});
+	document.getElementById('demo-reset').addEventListener('click', seed);
 })();
-if (window.ceacliuKitchen.full) {
+
+if (window.CK_DEMO.mode === "full") {
 (() => {
 	window.ceacliuKitchenFull = {
 		init({ config, controls, element, render }) {
@@ -291,7 +322,6 @@ if (window.ceacliuKitchen.full) {
 		},
 	};
 })();
-
 }
 (() => {
 	const config = window.ceacliuKitchen;
